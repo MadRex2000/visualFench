@@ -189,8 +189,8 @@ class StartPassWidget(Screen):
         global running
         if self.passInput.text == START_PASSWORD:
             running = True
-            io.push_manual_open()
             track.status(running)
+            io.push_manual_open()
             self.reset_pwInput()
             sm.current = 'root'
         else:
@@ -595,10 +595,10 @@ class RangeSettingWidget(Screen):
         self.scanAy = (1- float(settings['scanay'])) * Window.size[1]
         self.scanBx = float(settings['scanbx']) * Window.size[0]
         self.scanBy = (1- float(settings['scanby'])) * Window.size[1]
-        self.new_scanAx = 0
-        self.new_scanAy = 0
-        self.new_scanBx = 0
-        self.new_scanBy = 0
+        self.new_scanAx = float(settings['scanAx'])
+        self.new_scanAy = 1 - float(settings['scanAy'])
+        self.new_scanBx = float(settings['scanBx'])
+        self.new_scanBy = 1 - float(settings['scanBy'])
 
         self.img = Image(size=Window.size, allow_stretch=True)
         Clock.schedule_interval(self.update, 1.0/30.0)
@@ -618,7 +618,7 @@ class RangeSettingWidget(Screen):
         else:
             running = False
         
-        if running:
+        if running and io.status:
             frame = next(global_frame)
             buf1 = cv2.flip(frame, 0)
             buf = buf1.tostring()
@@ -819,6 +819,8 @@ class RootWidget(Screen):
 
     def update(self, dt):
         global running, global_frame
+
+        io.get_pin_reset()
         
         if track.get_status():
             running = True
@@ -827,13 +829,14 @@ class RootWidget(Screen):
 
         if io.get_auto_open():
             running = True
+            io.status = True
             track.status(running)
 
         elif io.get_auto_close():
             running = False
             track.status(running)
 
-        if running:
+        if running and io.status:
             self.startBtn.background_color=(0,0,1,1)
             self.stopBtn.background_color=(1,0,0,1)
             frame = next(global_frame)
@@ -843,6 +846,7 @@ class RootWidget(Screen):
             texture1.blit_buffer(buf, colorfmt='bgr', bufferfmt='ubyte')
             self.img.texture = texture1
         else:
+            running = False
             self.startBtn.background_color=(0,1,0,1)
             self.stopBtn.background_color=(0,0,1,1)
 

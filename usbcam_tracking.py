@@ -12,7 +12,7 @@ from sklearn.utils.linear_assignment_ import linear_assignment
 import warnings
 import configparser
 
-import record
+from record import Record
 
 config = configparser.ConfigParser()
 
@@ -20,7 +20,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 s_img, s_boxes = None, None
 INPUT_HW = (300, 300)
-MAIN_THREAD_TIMEOUT = 20.0  # 20 seconds
+MAIN_THREAD_TIMEOUT = 120.0  # 20 seconds
 
 check_count = 0
 
@@ -207,17 +207,16 @@ class TrtThread(threading.Thread):
         print('TrtThread: start running...')
         self.running = True
         while self.running:
-            if running:
-                ret, img = self.cam.read()
-                #if img is None and not ret:
-                #    break 
-                #H, W = img.shape[:2]
-                #img = img[H//4:(3*H)//4, W//4:(3*W)//4]
-                #img = cv2.resize(img, (W, H))
-                boxes, confs, clss = self.trt_ssd.detect(img, self.conf_th)
-                with self.condition:
-                    s_img, s_boxes = img, boxes
-                    self.condition.notify()
+            ret, img = self.cam.read()
+            #if img is None and not ret:
+            #    break 
+            #H, W = img.shape[:2]
+            #img = img[H//4:(3*H)//4, W//4:(3*W)//4]
+            #img = cv2.resize(img, (640, 480))
+            boxes, confs, clss = self.trt_ssd.detect(img, self.conf_th)
+            with self.condition:
+                s_img, s_boxes = img, boxes
+                self.condition.notify()
         del self.trt_ssd
         self.cuda_ctx.pop()
         del self.cuda_ctx
@@ -233,6 +232,8 @@ def get_frame(condition, io, cam):
     max_age = 10
     
     trackers = []
+
+    record = Record(cam)
     
     global s_img, s_boxes, check_count, running
 
@@ -253,7 +254,7 @@ def get_frame(condition, io, cam):
         boxes = np.array(boxes)
 
         H, W = img.shape[:2]
-
+        
         config.read('config.ini')
         sens = 101 - int(config['setting']['sensitivity'])
         scanAx = int(float(config['setting']['scanax']) * 640)
@@ -273,6 +274,8 @@ def get_frame(condition, io, cam):
         for t in reversed(to_del):
             trackers.pop(t)
         
+        if len(trackers) > 10:
+            trackers.clear()
         matched, unmatched_dets, unmatched_trks = associate_detections_to_trackers(boxes, trks)
 
         # update matched trackers with assigned detections
@@ -291,11 +294,12 @@ def get_frame(condition, io, cam):
                     incnt += 1
                     check_count += 1
                     if check_count >= sens:
-                        print(f'SOMEONE IN!!! {incnt}')
-                        running = False
-                        io.push_visual_close()
-                        recording_job = threading.Thread(target=record.main , args=(cam,))
-                        recording_job.start()
+                        print(f'SOMEONE IN!!!')
+                        #running = False
+                        io.push_visual_alarm()
+                        record.main()
+                        #recording_job = threading.Thread(target=record.main)
+                        #recording_job.start()
                         check_count = 0
                     #print("id: " + str(trk.id) + " - IN ")
                     idcnt.append(trk.id)
@@ -307,7 +311,7 @@ def get_frame(condition, io, cam):
                     idcnt.append(trk.id)'''
 
                 cv2.rectangle(img, (xmin, ymin), (xmax, ymax), (0, 0, 255), 2)
-                cv2.putText(img, "id: " + str(trk.id), (int(xmin) - 10, int(ymin) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
+                #cv2.putText(img, "id: " + str(trk.id), (int(xmin) - 10, int(ymin) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
 
         #Total, IN, OUT count & Line
         #cv2.putText(img, "Total: " + str(len(trackers)), (15, 25), cv2.FONT_HERSHEY_DUPLEX, 0.7, (255, 255, 255), 1)
@@ -337,7 +341,7 @@ def get_frame(condition, io, cam):
         #   break
         
         yield img
-
+        
 
 class Tracking:
     def __init__(self, io):
@@ -349,7 +353,9 @@ class Tracking:
 
     def start(self):
         self.model = 'ssd_mobilenet_v1_coco'
-        self.cam = cv2.VideoCapture(0)
+        self.cam = cv2.VideoCapture(0, cv2.CAP_GSTREAMER)
+        self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+        self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         #self.cam = cv2.VideoCapture('video/8.mp4')
     
         if not self.cam.isOpened():
