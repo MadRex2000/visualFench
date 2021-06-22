@@ -11,8 +11,7 @@ from sklearn.utils.linear_assignment_ import linear_assignment
 
 import warnings
 import configparser
-
-from record import Record
+import datetime
 
 config = configparser.ConfigParser()
 
@@ -208,11 +207,8 @@ class TrtThread(threading.Thread):
         self.running = True
         while self.running:
             ret, img = self.cam.read()
-            #if img is None and not ret:
-            #    break 
-            #H, W = img.shape[:2]
-            #img = img[H//4:(3*H)//4, W//4:(3*W)//4]
-            #img = cv2.resize(img, (640, 480))
+            if img is None:
+                break 
             boxes, confs, clss = self.trt_ssd.detect(img, self.conf_th)
             with self.condition:
                 s_img, s_boxes = img, boxes
@@ -226,6 +222,22 @@ class TrtThread(threading.Thread):
         self.running = False
         self.join()
 
+def record_video(condition):
+    global s_img
+    config.read('config.ini')
+    record_time = float(config['setting']['record'])
+    end_time = datetime.datetime.now() + datetime.timedelta(seconds=record_time * 60)
+
+    fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    out = cv2.VideoWriter(f'/home/dev-admin/Desktop/video/{datetime.datetime.now().strftime("%Y-%m-%d-%H:%M:%S")}.avi', fourcc, 20.0, (640, 480))
+
+    while end_time >= datetime.datetime.now():
+        with condition:
+            if condition.wait(timeout=120):
+                img = s_img
+        out.write(img)
+    print('Finish record!')
+
 
 def get_frame(condition, io, cam):
     frame = 0
@@ -233,10 +245,9 @@ def get_frame(condition, io, cam):
     
     trackers = []
 
-    record = Record(cam)
-    
     global s_img, s_boxes, check_count, running
 
+    
     io.push_visual_open()
     
     print("frame number ", frame)
@@ -295,11 +306,10 @@ def get_frame(condition, io, cam):
                     check_count += 1
                     if check_count >= sens:
                         print(f'SOMEONE IN!!!')
-                        #running = False
+                        running = False
                         io.push_visual_alarm()
-                        record.main()
-                        #recording_job = threading.Thread(target=record.main)
-                        #recording_job.start()
+                        recording_job = threading.Thread(target=record_video, args=(condition, ))
+                        recording_job.start()
                         check_count = 0
                     #print("id: " + str(trk.id) + " - IN ")
                     idcnt.append(trk.id)
@@ -353,7 +363,7 @@ class Tracking:
 
     def start(self):
         self.model = 'ssd_mobilenet_v1_coco'
-        self.cam = cv2.VideoCapture(0, cv2.CAP_GSTREAMER)
+        self.cam = cv2.VideoCapture(0)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         #self.cam = cv2.VideoCapture('video/8.mp4')
