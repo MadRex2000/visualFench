@@ -31,7 +31,7 @@ class IO:
 
     def get_auto_open(self):
         value = GPIO.input(self.auto_open_pin)
-        if value and not self.running:
+        if value and not self.running and self.status:
             self.running = True
             write_log('Auto open!')
             return True

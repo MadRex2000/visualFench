@@ -300,12 +300,11 @@ def get_frame(condition, io, cam):
                 
                 #IN count
                 #if scanAx <  cx < scanBx and scanAy < cy < scanBy:
-                if (scanAx <  xmin + sens < scanBx or scanAx < xmax - sens < scanBx) and (scanAy < ymin + sens < scanBy or scanAy < ymax - sens < scanBy):
+                if (scanAx < xmin + sens < scanBx or scanAx < xmax - sens < scanBx or (scanAx > xmin + sens and scanBx < xmax - sens)) and (scanAy < ymin + sens < scanBy or scanAy < ymax - sens < scanBy or (scanAy > ymin + sens and scanBy < ymax - sens)):
                 #if (360 <  xmin + sens < 640 or 360 < xmax - sens < 640) or (160 < ymin + sens < 340 or 160 < ymax - sens < 340):
                     incnt += 1
                     check_count += 1
                     if check_count >= sens:
-                        print(f'SOMEONE IN!!!')
                         running = False
                         io.push_visual_alarm()
                         recording_job = threading.Thread(target=record_video, args=(condition, ))
