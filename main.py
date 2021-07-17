@@ -782,7 +782,7 @@ class RootWidget(Screen):
                 font_size=24,
                 pos_hint={'x': 0.35, 'y': 0.83}, 
                 size_hint=(.15, .15),
-                background_color=(0,0,1,1)
+                background_color=(0,1,0,1)
                 )
         self.startBtn.bind(on_press=self.start)
         self.stopBtn = Button(
@@ -790,7 +790,7 @@ class RootWidget(Screen):
                 font_size=24,
                 pos_hint={'x': 0.75, 'y': 0.83},
                 size_hint=(.15, .15),
-                background_color=(1,0,0,1)
+                background_color=(1,1,1,1)
                 )
         self.stopBtn.bind(on_press=self.stop)
 
@@ -837,8 +837,8 @@ class RootWidget(Screen):
             track.status(running)
 
         if running and io.status:
-            self.startBtn.background_color=(0,0,1,1)
-            self.stopBtn.background_color=(1,0,0,1)
+            self.startBtn.background_color=(0,1,0,1)
+            self.stopBtn.background_color=(1,1,1,1)
             frame = next(global_frame)
             buf1 = cv2.flip(frame, 0)
             buf = buf1.tostring()
@@ -847,8 +847,8 @@ class RootWidget(Screen):
             self.img.texture = texture1
         else:
             running = False
-            self.startBtn.background_color=(0,1,0,1)
-            self.stopBtn.background_color=(0,0,1,1)
+            self.startBtn.background_color=(1,1,1,1)
+            self.stopBtn.background_color=(1,0,0,1)
 
     
     def start(self, instance):
