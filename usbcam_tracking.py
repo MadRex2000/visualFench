@@ -12,6 +12,8 @@ from sklearn.utils.linear_assignment_ import linear_assignment
 import warnings
 import configparser
 import datetime
+import time
+import math
 
 config = configparser.ConfigParser()
 
@@ -197,9 +199,27 @@ class TrtThread(threading.Thread):
         self.trt_ssd = None   # to be created when run
         self.running = False
 
+    def modify_contrast_brightness(img):
+
+        config.read('config.ini')
+
+        brightness = float(config['image']['brightness'])
+        contrast = float(config['image']['contrast']
+
+        B = brightness / 255.0
+        c = contrast / 255.0
+        k = math.tan((45 + 44 * c) / 180 * math.pi)
+
+        img = (img - 127.5 * (1 - B)) * k + 127.5 * (1 + B)
+
+        img = np.clip(img, 0 ,255).astype(np.unit8)
+
+        return img
+
     def run(self):
         global s_img, s_boxes, running
-
+        time.sleep(5)
+        
         print('TrtThread: loading the TRT SSD engine...')
         self.cuda_ctx = cuda.Device(0).make_context()  # GPU 0
         self.trt_ssd = TrtSSD(self.model, INPUT_HW)
@@ -208,7 +228,8 @@ class TrtThread(threading.Thread):
         while self.running:
             ret, img = self.cam.read()
             if img is None:
-                break 
+                continue
+            img = self.modify_contrast_brightness(img)
             boxes, confs, clss = self.trt_ssd.detect(img, self.conf_th)
             with self.condition:
                 s_img, s_boxes = img, boxes
@@ -361,12 +382,14 @@ class Tracking:
         check_count = 0
 
     def start(self):
+        global s_img
         self.model = 'ssd_mobilenet_v1_coco'
         self.cam = cv2.VideoCapture(0)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
         #self.cam = cv2.VideoCapture('video/8.mp4')
-    
+        ret, s_img = self.cam.read()
+
         if not self.cam.isOpened():
             raise SystemExit('ERROR: failed to open camera!')
     
