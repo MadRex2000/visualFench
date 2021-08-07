@@ -220,8 +220,9 @@ class TrtThread(threading.Thread):
 
     def refresh_cam(self): 
         new_paths = glob.glob('/dev/video*')
-        new_paths.remove(device_paths[0])
-        self.cam = cv2.VidoeCapture(new_paths[0])
+        # new_paths.remove(device_paths[0])
+        if new_paths:
+            self.cam = cv2.VidoeCapture(new_paths[0])
 
     def run(self):
         global s_img, s_boxes, running
@@ -235,7 +236,7 @@ class TrtThread(threading.Thread):
         while self.running:
             ret, img = self.cam.read()
             if img is None:
-                self.refresh_cam()
+                # self.refresh_cam()
                 continue
             # img = self.modify_contrast_brightness(img)
             boxes, confs, clss = self.trt_ssd.detect(img, self.conf_th)
@@ -393,9 +394,10 @@ class Tracking:
         global s_img
         self.model = 'ssd_mobilenet_v1_coco'
         self.cam = cv2.VideoCapture(device_paths[0])
+        # self.cam = cv2.VideoCapture(0)
         self.cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
         self.cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
-        #self.cam = cv2.VideoCapture('video/8.mp4')
+        # self.cam = cv2.VideoCapture('video/8.mp4')
         ret, s_img = self.cam.read()
         
         if not self.cam.isOpened():

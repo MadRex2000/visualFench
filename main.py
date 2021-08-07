@@ -829,7 +829,6 @@ class RootWidget(Screen):
 
         if io.get_auto_open():
             running = True
-            io.status = True
             track.status(running)
 
         elif io.get_auto_close():
