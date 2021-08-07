@@ -202,7 +202,7 @@ class TrtThread(threading.Thread):
         self.trt_ssd = None   # to be created when run
         self.running = False
 
-    def modify_contrast_brightness(img):
+    def modify_contrast_brightness(self, img):
 
         config.read('config.ini')
         
@@ -225,12 +225,12 @@ class TrtThread(threading.Thread):
 
     def run(self):
         global s_img, s_boxes, running
-        time.sleep(5)
         
         print('TrtThread: loading the TRT SSD engine...')
         self.cuda_ctx = cuda.Device(0).make_context()  # GPU 0
         self.trt_ssd = TrtSSD(self.model, INPUT_HW)
         print('TrtThread: start running...')
+        time.sleep(5)
         self.running = True
         while self.running:
             ret, img = self.cam.read()
@@ -411,7 +411,7 @@ class Tracking:
         return get_frame(self.condition, self.io, self.cam)
 
     def local_main(self):
-        get_frame(self.condition)
+        get_frame(self.condition, self.io, self.cam)
 
     def status(self, status=False):
         global running
@@ -427,7 +427,9 @@ class Tracking:
         cv2.destroyAllWindows()
 
 if __name__ == '__main__':
-    track = Tracking()
+    from jetson_io import IO
+    io = IO()
+    track = Tracking(io)
     track.start()
     track.local_main()
     track.stop()
