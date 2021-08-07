@@ -34,15 +34,21 @@ class IO:
         if value and not self.running and self.status:
             self.running = True
             write_log('Auto open!')
+            GPIO.output(self.manual_open_pin, GPIO.HIGH)
+            GPIO.output(self.manual_close_pin, GPIO.LOW)
+            GPIO.output(self.visual_alarm_pin, GPIO.LOW)
             return True
         else:
             return False
 
     def get_auto_close(self):
-        value = GPIO.input(self.auto_close_pin)
-        if value and self.running:
+        value = GPIO.input(self.auto_open_pin)
+        if not value and self.running:
             self.running = False
             write_log('Auto close!')
+            GPIO.output(self.manual_close_pin, GPIO.HIGH)
+            GPIO.output(self.manual_open_pin, GPIO.LOW)
+            GPIO.output(self.visual_alarm_pin, GPIO.LOW)
             return True
         else:
             return False
