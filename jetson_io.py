@@ -121,3 +121,33 @@ class IO:
 
     def clean(self):
         GPIO.cleanup()
+
+
+if __name__ == '__main__':
+    io = IO()
+    
+    while True:
+        act = input("Please enter 'r' for read, 'out1', 'out2', 'out3' for output or 'q' for exit: ")
+
+        if act == 'out1':
+            io.push_manual_open()
+
+        if act == 'out2':
+            io.push_manual_close()
+
+        if act == 'out3':
+            io.push_visual_alarm()
+
+        if act == 'r':
+            if io.get_auto_open():
+                print('auto_open')
+
+            if io.get_auto_close():
+                print('auto_close')
+
+            if io.get_pin_reset():
+                print('reset')
+        
+        if act == 'q':
+            break
+
