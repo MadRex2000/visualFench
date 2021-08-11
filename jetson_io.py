@@ -1,16 +1,208 @@
 import time
 import datetime
 
-import Jetson.GPIO as GPIO
 
-GPIO.setmode(GPIO.BCM)
 
 def write_log(content):
     with open('/home/dev-admin/Desktop/logs.txt', 'a') as log:
         log.write(f'[{datetime.datetime.now().strftime("%Y/%m/%d %H:%M:%S")}] {content}\n')
 
+
+class MutilpleIO:
+    def __init__(self):
+        import serial
+        import Jetson.GPIO as GPIO
+        self.com_port = 
+        self.baud_rates= 9600
+        self.ser = serial.Serial(com_port, baud_rates)
+        GPIO.setmode(GPIO.BCM)
+        self.running = True
+        self.status = True
+        self.manual = False
+        self.auto = True
+        self.auto_open_pin = 8
+        self.auto_close_pin = 7
+        self.reset_pin = 17
+
+        GPIO.setup(self.auto_open_pin, GPIO.IN)
+        GPIO.setup(self.auto_close_pin, GPIO.IN)
+        GPIO.setup(self.reset_pin, GPIO.IN)
+
+    def change_manual_auto(self):
+        self.manual = False
+        self.auto = True
+
+    def get_auto_open(self):
+        value = GPIO.input(self.auto_open_pin)
+        if value:
+            self.change_manual_auto()
+
+        if value and not self.running and self.status and not self.manual and self.auto:
+            self.running = True
+            write_log('Auto open!')
+            ser.write(b'100\n')
+            return True
+        else:
+            return False
+
+    def get_auto_close(self):
+        value = GPIO.input(self.auto_open_pin)
+        if not value and self.running and not self.manual and self.auto:
+            self.running = False
+            write_log('Auto close!')
+            ser.write(b'010\n')
+            return True
+        else:
+            return False
+
+    def get_pin_reset(self):
+        value = GPIO.input(self.reset_pin)
+        if value and not self.status:
+            self.manual = False
+            ser.write(b'010\n')
+            self.status = True
+            write_log('Alarm reset!')
+            return True
+        else:
+            return False
+
+    def push_manual_open(self):
+        if self.status:
+            self.running = True
+            self.manual = True
+            self.auto = False
+        ser.write(b'100\n')
+            write_log('Manual open!')
+
+    def push_manual_close(self):
+        self.running = False
+        self.manual = True
+        self.auto = False
+        ser.write(b'010\n')
+        write_log('Manual close!')
+    
+    def push_visual_open(self):
+        if self.status:
+            self.running = True
+            self.manual = True
+            self.auto = False
+            ser.write(b'100\n')
+            write_log('Manual open!')
+
+    def push_visual_close(self):
+        self.running = False
+        ser.write(b'010\n')
+        write_log('Visual close!')
+
+    def push_visual_alarm(self):
+        self.running = False
+        self.status = False
+        ser.write(b'001\n')
+        write_log('Visual alarm!')
+
+    def clean(self):
+        GPIO.cleanup()
+
+
+class ArduinoIO:
+    def __init__(self):
+        import serial
+        self.com_port = 
+        self.baud_rates= 9600
+        self.ser = serial.Serial(com_port, baud_rates)
+
+        self.running = True
+        self.status = True
+        self.manual = False
+        self.auto = True
+
+    def change_manual_auto(self):
+        self.manual = False
+        self.auto = True
+
+    def get_auto_open(self):
+        ser.write(b'r\n')
+        data = ser.readline()
+
+        if data == '10' or '11':
+            value = True
+
+        if value:
+            self.change_manual_auto()
+
+        if value and not self.running and self.status and not self.manual and self.auto:
+            self.running = True
+            write_log('Auto open!')
+            ser.write(b'100\n')
+            return True
+        else,:
+            return False
+
+    def get_auto_close(self):
+        ser.write(b'r\n')
+        data = ser.readline()
+
+        if data == '00' or '01':
+            value = True
+        
+        if not value and self.running and not self.manual and self.auto:
+            self.running = False
+            write_log('Auto close!')
+            ser.write(b'010\n')
+            return True
+        else:
+            return False
+
+    def get_pin_reset(self):
+        value = GPIO.input(self.reset_pin)
+        if value and not self.status:
+            self.manual = False
+            ser.write(b'010\n')
+            self.status = True
+            write_log('Alarm reset!')
+            return True
+        else:
+            return False
+
+    def push_manual_open(self):
+        if self.status:
+            self.running = True
+            self.manual = True
+            self.auto = False
+            ser.write(b'100\n')
+            write_log('Manual open!')
+
+    def push_manual_close(self):
+        self.running = False
+        self.manual = True
+        self.auto = False
+        ser.write(b'010\n')
+        write_log('Manual close!')
+    
+    def push_visual_open(self):
+        if self.status:
+            self.running = True
+            self.manual = True
+            self.auto = False
+            ser.write(b'100\n')
+            write_log('Manual open!')
+
+    def push_visual_close(self):
+        self.running = False
+        ser.write(b'010\n')
+        write_log('Visual close!')
+
+    def push_visual_alarm(self):
+        self.running = False
+        self.status = False
+        ser.write(b'001\n')
+        write_log('Visual alarm!')
+
+
 class IO:
     def __init__(self):
+        import Jetson.GPIO as GPIO
+        GPIO.setmode(GPIO.BCM)
         self.running = True
         self.status = True
         self.manual = False
