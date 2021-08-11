@@ -15,11 +15,11 @@ class IO:
         self.status = True
         self.manual = False
         self.auto = True
-        self.manual_open_pin = 16
-        self.manual_close_pin = 18
-        self.visual_open_pin = 16
-        self.visual_close_pin = 18
-        self.visual_alarm_pin = 22
+        self.manual_open_pin = 20
+        self.manual_close_pin = 21
+        self.visual_open_pin = 20
+        self.visual_close_pin = 21
+        self.visual_alarm_pin = 19
         self.auto_open_pin = 8
         self.auto_close_pin = 7
         self.reset_pin = 17
