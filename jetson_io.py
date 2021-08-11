@@ -15,14 +15,14 @@ class IO:
         self.status = True
         self.manual = False
         self.auto = True
-        self.manual_open_pin = 20
-        self.manual_close_pin = 21
-        self.visual_open_pin = 20
-        self.visual_close_pin = 21
-        self.visual_alarm_pin = 19
+        self.manual_open_pin = 16
+        self.manual_close_pin = 18
+        self.visual_open_pin = 16
+        self.visual_close_pin = 18
+        self.visual_alarm_pin = 22
         self.auto_open_pin = 8
         self.auto_close_pin = 7
-        self.reset_pin = 12
+        self.reset_pin = 17
 
         GPIO.setup(self.manual_open_pin, GPIO.OUT, initial=GPIO.LOW)
         GPIO.setup(self.manual_close_pin, GPIO.OUT, initial=GPIO.LOW)
@@ -70,6 +70,7 @@ class IO:
             GPIO.output(self.manual_open_pin, GPIO.LOW)
             GPIO.output(self.visual_alarm_pin, GPIO.LOW)
             self.status = True
+            write_log('Alarm reset!')
             return True
         else:
             return False
@@ -117,3 +118,6 @@ class IO:
         GPIO.output(self.visual_close_pin, GPIO.LOW)
         GPIO.output(self.visual_open_pin, GPIO.LOW)
         write_log('Visual alarm!')
+
+    def clean(self):
+        GPIO.cleanup()

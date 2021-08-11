@@ -888,6 +888,7 @@ def main():
     Config.write()
     CVCamApp().run()
     track.stop()
+    io.clean()
     cv2.destroyAllWindows()
 
 
