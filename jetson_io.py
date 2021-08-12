@@ -111,7 +111,7 @@ class ArduinoIO:
         self.com_port = '/dev/ttyACM0'
         self.baud_rates= 9600
         self.ser = serial.Serial(self.com_port, self.baud_rates)
-        # time.sleep(3)
+        time.sleep(3)
 
         self.running = True
         self.status = True
@@ -125,9 +125,9 @@ class ArduinoIO:
     def get_auto_open(self):
         self.ser.write(b'r\n')
         raw_data = self.ser.readline()
-        data = raw_data.decode()
+        data = raw_data.decode().replace('\n', '').replace('\r', '')
 
-        value = True if data == '10' else False
+        value = True if data == '10\n' else False
 
         if value:
             self.change_manual_auto()
@@ -143,9 +143,9 @@ class ArduinoIO:
     def get_auto_close(self):
         self.ser.write(b'r\n')
         raw_data = self.ser.readline()
-        data = raw_data.decode()
+        data = raw_data.decode().replace('\n', '').replace('\r', '')
 
-        value = True if data == '00' else False
+        value = True if data == '00\n' else False
         
         if not value and self.running and not self.manual and self.auto:
             self.running = False
@@ -158,7 +158,7 @@ class ArduinoIO:
     def get_pin_reset(self):
         self.ser.write(b'r\n')
         raw_data = self.ser.readline()
-        data = raw_data.decode()
+        data = raw_data.decode().replace('\n', '').replace('\r', '')
         
         if (data == '01' or data == '11') and not self.status:
             self.manual = False

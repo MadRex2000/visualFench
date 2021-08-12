@@ -21,7 +21,7 @@ from kivy.core.window import Window
 import cv2
 
 from usbcam_tracking import Tracking
-from jetson_io import IO
+from jetson_io import ArduinoIO
 
 Window.size = (800, 600)
 
