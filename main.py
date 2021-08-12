@@ -25,7 +25,7 @@ from jetson_io import IO
 
 Window.size = (800, 600)
 
-io = IO()
+io = ArduinoIO()
 
 track = Tracking(io)
 track.start()

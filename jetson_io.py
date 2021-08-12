@@ -12,9 +12,10 @@ class MutilpleIO:
     def __init__(self):
         import serial
         import Jetson.GPIO as GPIO
-        self.com_port = 
+        self.com_port = '/dev/ttyACM0'
         self.baud_rates= 9600
-        self.ser = serial.Serial(com_port, baud_rates)
+        self.ser = serial.Serial(self.com_port, self.baud_rates)
+        time.sleep(3)
         GPIO.setmode(GPIO.BCM)
         self.running = True
         self.status = True
@@ -40,7 +41,7 @@ class MutilpleIO:
         if value and not self.running and self.status and not self.manual and self.auto:
             self.running = True
             write_log('Auto open!')
-            ser.write(b'100\n')
+            self.ser.write(b'100\n')
             return True
         else:
             return False
@@ -50,7 +51,7 @@ class MutilpleIO:
         if not value and self.running and not self.manual and self.auto:
             self.running = False
             write_log('Auto close!')
-            ser.write(b'010\n')
+            self.ser.write(b'010\n')
             return True
         else:
             return False
@@ -59,7 +60,7 @@ class MutilpleIO:
         value = GPIO.input(self.reset_pin)
         if value and not self.status:
             self.manual = False
-            ser.write(b'010\n')
+            self.ser.write(b'010\n')
             self.status = True
             write_log('Alarm reset!')
             return True
@@ -71,14 +72,14 @@ class MutilpleIO:
             self.running = True
             self.manual = True
             self.auto = False
-        ser.write(b'100\n')
+            self.ser.write(b'100\n')
             write_log('Manual open!')
 
     def push_manual_close(self):
         self.running = False
         self.manual = True
         self.auto = False
-        ser.write(b'010\n')
+        self.ser.write(b'010\n')
         write_log('Manual close!')
     
     def push_visual_open(self):
@@ -86,18 +87,18 @@ class MutilpleIO:
             self.running = True
             self.manual = True
             self.auto = False
-            ser.write(b'100\n')
+            self.ser.write(b'100\n')
             write_log('Manual open!')
 
     def push_visual_close(self):
         self.running = False
-        ser.write(b'010\n')
+        self.ser.write(b'010\n')
         write_log('Visual close!')
 
     def push_visual_alarm(self):
         self.running = False
         self.status = False
-        ser.write(b'001\n')
+        self.ser.write(b'001\n')
         write_log('Visual alarm!')
 
     def clean(self):
@@ -107,9 +108,10 @@ class MutilpleIO:
 class ArduinoIO:
     def __init__(self):
         import serial
-        self.com_port = 
+        self.com_port = '/dev/ttyACM0'
         self.baud_rates= 9600
-        self.ser = serial.Serial(com_port, baud_rates)
+        self.ser = serial.Serial(self.com_port, self.baud_rates)
+        # time.sleep(3)
 
         self.running = True
         self.status = True
@@ -121,11 +123,11 @@ class ArduinoIO:
         self.auto = True
 
     def get_auto_open(self):
-        ser.write(b'r\n')
-        data = ser.readline()
+        self.ser.write(b'r\n')
+        raw_data = self.ser.readline()
+        data = raw_data.decode()
 
-        if data == '10' or '11':
-            value = True
+        value = True if data == '10' else False
 
         if value:
             self.change_manual_auto()
@@ -133,31 +135,34 @@ class ArduinoIO:
         if value and not self.running and self.status and not self.manual and self.auto:
             self.running = True
             write_log('Auto open!')
-            ser.write(b'100\n')
+            self.ser.write(b'100\n')
             return True
-        else,:
+        else:
             return False
 
     def get_auto_close(self):
-        ser.write(b'r\n')
-        data = ser.readline()
+        self.ser.write(b'r\n')
+        raw_data = self.ser.readline()
+        data = raw_data.decode()
 
-        if data == '00' or '01':
-            value = True
+        value = True if data == '00' else False
         
         if not value and self.running and not self.manual and self.auto:
             self.running = False
             write_log('Auto close!')
-            ser.write(b'010\n')
+            self.ser.write(b'010\n')
             return True
         else:
             return False
 
     def get_pin_reset(self):
-        value = GPIO.input(self.reset_pin)
-        if value and not self.status:
+        self.ser.write(b'r\n')
+        raw_data = self.ser.readline()
+        data = raw_data.decode()
+        
+        if (data == '01' or data == '11') and not self.status:
             self.manual = False
-            ser.write(b'010\n')
+            self.ser.write(b'010\n')
             self.status = True
             write_log('Alarm reset!')
             return True
@@ -169,14 +174,14 @@ class ArduinoIO:
             self.running = True
             self.manual = True
             self.auto = False
-            ser.write(b'100\n')
+            self.ser.write(b'100\n')
             write_log('Manual open!')
 
     def push_manual_close(self):
         self.running = False
         self.manual = True
         self.auto = False
-        ser.write(b'010\n')
+        self.ser.write(b'010\n')
         write_log('Manual close!')
     
     def push_visual_open(self):
@@ -184,18 +189,18 @@ class ArduinoIO:
             self.running = True
             self.manual = True
             self.auto = False
-            ser.write(b'100\n')
+            self.ser.write(b'100\n')
             write_log('Manual open!')
 
     def push_visual_close(self):
         self.running = False
-        ser.write(b'010\n')
+        self.ser.write(b'010\n')
         write_log('Visual close!')
 
     def push_visual_alarm(self):
         self.running = False
         self.status = False
-        ser.write(b'001\n')
+        self.ser.write(b'001\n')
         write_log('Visual alarm!')
 
 
@@ -316,7 +321,7 @@ class IO:
 
 
 if __name__ == '__main__':
-    io = IO()
+    io = ArduinoIO()
     
     while True:
         act = input("Please enter 'r' for read, 'out1', 'out2', 'out3' for output or 'q' for exit: ")
