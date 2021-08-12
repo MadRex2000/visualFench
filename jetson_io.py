@@ -127,7 +127,7 @@ class ArduinoIO:
         raw_data = self.ser.readline()
         data = raw_data.decode().replace('\n', '').replace('\r', '')
 
-        value = True if data == '10\n' else False
+        value = True if data == '10' else False
 
         if value:
             self.change_manual_auto()
@@ -145,9 +145,9 @@ class ArduinoIO:
         raw_data = self.ser.readline()
         data = raw_data.decode().replace('\n', '').replace('\r', '')
 
-        value = True if data == '00\n' else False
+        value = True if data == '00' else False
         
-        if not value and self.running and not self.manual and self.auto:
+        if value and self.running and not self.manual and self.auto:
             self.running = False
             write_log('Auto close!')
             self.ser.write(b'010\n')
