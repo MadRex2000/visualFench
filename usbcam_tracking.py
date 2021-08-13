@@ -285,7 +285,8 @@ def get_frame(condition, io, cam):
     idstp = collections.defaultdict(list)
     idcnt = []
     incnt, outcnt = 0, 0
-    
+    alarm = False
+
     while running:
         with condition:
             if condition.wait(timeout=MAIN_THREAD_TIMEOUT):
@@ -334,6 +335,7 @@ def get_frame(condition, io, cam):
                 #if (360 <  xmin + sens < 640 or 360 < xmax - sens < 640) or (160 < ymin + sens < 340 or 160 < ymax - sens < 340):
                     incnt += 1
                     check_count += 1
+                    alarm = True
                     if check_count >= sens:
                         running = False
                         io.push_visual_alarm()
@@ -342,7 +344,8 @@ def get_frame(condition, io, cam):
                         check_count = 0
                     #print("id: " + str(trk.id) + " - IN ")
                     idcnt.append(trk.id)
-
+                else:
+                    alarm = False
                 #OUT count
                 '''elif idstp[trk.id][0][1] > H // 2 and cy < H // 2 and trk.id not in idcnt:
                     outcnt += 1
@@ -354,6 +357,8 @@ def get_frame(condition, io, cam):
 
         #Total, IN, OUT count & Line
         #cv2.putText(img, "Total: " + str(len(trackers)), (15, 25), cv2.FONT_HERSHEY_DUPLEX, 0.7, (255, 255, 255), 1)
+        if alarm:
+            cv2.putText(img, "禁制區遭受入侵中！！", (15, 25), cv2.FONT_HERSHEY_DUPLEX, 1.2, (255, 0, 0), 1)
 
         #cv2.rectangle(img, (360, 160), (640, 340), (255, 0, 0), 3)
         cv2.rectangle(img, (scanAx, scanAy), (scanBx, scanBy), (255, 0, 0), 3)
