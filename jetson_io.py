@@ -203,6 +203,8 @@ class ArduinoIO:
         self.ser.write(b'001\n')
         write_log('Visual alarm!')
 
+    def clean(self):
+        self.ser.write(b'000\n')
 
 class IO:
     def __init__(self):

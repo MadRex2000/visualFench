@@ -834,11 +834,14 @@ class RootWidget(Screen):
         elif io.get_auto_close():
             running = False
             track.status(running)
-
+        try:
+            frame = next(global_frame)
+        except:
+            running = True
+        
         if running and io.status:
             self.startBtn.background_color=(0,1,0,1)
             self.stopBtn.background_color=(1,1,1,1)
-            frame = next(global_frame)
             buf1 = cv2.flip(frame, 0)
             buf = buf1.tostring()
             texture1 = Texture.create(size=(frame.shape[1], frame.shape[0]), colorfmt='bgr')
