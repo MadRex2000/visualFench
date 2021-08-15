@@ -834,12 +834,10 @@ class RootWidget(Screen):
         elif io.get_auto_close():
             running = False
             track.status(running)
-        try:
-            frame = next(global_frame)
-        except:
-            running = True
         
-        if running and io.status:
+        if io.status:
+            running = True
+            frame = next(global_frame)
             self.startBtn.background_color=(0,1,0,1)
             self.stopBtn.background_color=(1,1,1,1)
             buf1 = cv2.flip(frame, 0)
