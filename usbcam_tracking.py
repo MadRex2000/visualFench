@@ -279,7 +279,7 @@ def get_frame(condition, io, cam):
     img, boxes = s_img, s_boxes
 
     
-    io.push_visual_open()
+    # io.push_visual_open()
     
     print("frame number ", frame)
     frame += 1
@@ -339,7 +339,7 @@ def get_frame(condition, io, cam):
                 #if (360 <  xmin + sens < 640 or 360 < xmax - sens < 640) or (160 < ymin + sens < 340 or 160 < ymax - sens < 340):
                     incnt += 1
                     check_count += 1
-                    if check_count >= sens:
+                    if check_count >= sens and not alarm:
                         alarm = True
                         running = False
                         io.push_visual_alarm()
@@ -348,8 +348,6 @@ def get_frame(condition, io, cam):
                         check_count = 0
                     #print("id: " + str(trk.id) + " - IN ")
                     idcnt.append(trk.id)
-                else:
-                    alarm = False
                 
                 #OUT count
                 '''elif idstp[trk.id][0][1] > H // 2 and cy < H // 2 and trk.id not in idcnt:
