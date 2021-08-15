@@ -276,6 +276,7 @@ def get_frame(condition, io, cam):
     trackers = []
 
     global s_img, s_boxes, check_count, running
+    img, boxes = s_img, s_boxes
 
     
     io.push_visual_open()
@@ -287,13 +288,13 @@ def get_frame(condition, io, cam):
     incnt, outcnt = 0, 0
     alarm = False
 
-    while running:
+    while True:
         with condition:
             if condition.wait(timeout=MAIN_THREAD_TIMEOUT):
                 img, boxes = s_img, s_boxes
             else:
                 raise SystemExit('ERROR: timeout waiting for img from child')
-        boxes = np.array(boxes)
+        boxes = np.array(boxes)        
 
         H, W = img.shape[:2]
         
@@ -320,6 +321,9 @@ def get_frame(condition, io, cam):
             trackers.clear()
         matched, unmatched_dets, unmatched_trks = associate_detections_to_trackers(boxes, trks)
 
+        if io.status:
+            alarm = False
+
         # update matched trackers with assigned detections
         for t, trk in enumerate(trackers):
             if t not in unmatched_trks:
@@ -336,7 +340,7 @@ def get_frame(condition, io, cam):
                     incnt += 1
                     check_count += 1
                     if check_count >= sens:
-                        cv2.putText(img, "Alarm!!", (10, 100), cv2.FONT_HERSHEY_TRIPLEX, 3.0, (0, 0, 255), 2, cv2.LINE_AA)
+                        alarm = True
                         running = False
                         io.push_visual_alarm()
                         recording_job = threading.Thread(target=record_video, args=(condition, ))
@@ -344,6 +348,9 @@ def get_frame(condition, io, cam):
                         check_count = 0
                     #print("id: " + str(trk.id) + " - IN ")
                     idcnt.append(trk.id)
+                else:
+                    alarm = False
+                
                 #OUT count
                 '''elif idstp[trk.id][0][1] > H // 2 and cy < H // 2 and trk.id not in idcnt:
                     outcnt += 1
@@ -352,9 +359,11 @@ def get_frame(condition, io, cam):
 
                 cv2.rectangle(img, (xmin, ymin), (xmax, ymax), (0, 0, 255), 2)
                 #cv2.putText(img, "id: " + str(trk.id), (int(xmin) - 10, int(ymin) - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 255), 2)
-
+ 
         #Total, IN, OUT count & Line
         #cv2.putText(img, "Total: " + str(len(trackers)), (15, 25), cv2.FONT_HERSHEY_DUPLEX, 0.7, (255, 255, 255), 1)
+        if alarm:
+            cv2.putText(img, "Alarm!!", (10, 100), cv2.FONT_HERSHEY_TRIPLEX, 3.0, (0, 0, 255), 2, cv2.LINE_AA)
 
         #cv2.rectangle(img, (360, 160), (640, 340), (255, 0, 0), 3)
         cv2.rectangle(img, (scanAx, scanAy), (scanBx, scanBy), (255, 0, 0), 3)
