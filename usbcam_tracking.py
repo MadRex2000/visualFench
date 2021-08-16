@@ -326,7 +326,7 @@ def get_frame(condition, io, cam):
 
         # update matched trackers with assigned detections
         for t, trk in enumerate(trackers):
-            if t not in unmatched_trks:
+            if running and t not in unmatched_trks:
                 d = matched[np.where(matched[:, 1] == t)[0], 0]
                 trk.update(boxes[d, :][0])
                 xmin, ymin, xmax, ymax = boxes[d, :][0]

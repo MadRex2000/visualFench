@@ -113,7 +113,7 @@ class ArduinoIO:
         self.ser = serial.Serial(self.com_port, self.baud_rates)
         time.sleep(3)
 
-        self.running = False
+        self.running = True
         self.status = True
         self.manual = False
         self.auto = True
@@ -131,6 +131,9 @@ class ArduinoIO:
 
         if value:
             self.change_manual_auto()
+        
+        if self.running and self.status:
+            self.ser.write(b'100\n')
 
         if value and not self.running and self.status and not self.manual and self.auto:
             self.running = True
