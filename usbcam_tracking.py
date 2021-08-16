@@ -29,7 +29,7 @@ MAIN_THREAD_TIMEOUT = 120.0  # 20 seconds
 check_count = 0
 
 
-running = False
+running = True
 
 # SORT Multi object tracking
 
@@ -234,16 +234,15 @@ class TrtThread(threading.Thread):
         time.sleep(5)
         self.running = True
         while self.running:
-            if running:
-                ret, img = self.cam.read()
-                if img is None:
-                    # self.refresh_cam()
-                    continue
-                # img = self.modify_contrast_brightness(img)
-                boxes, confs, clss = self.trt_ssd.detect(img, self.conf_th)
-                with self.condition:
-                    s_img, s_boxes = img, boxes
-                    self.condition.notify()
+            ret, img = self.cam.read()
+            if img is None:
+                # self.refresh_cam()
+                continue
+            # img = self.modify_contrast_brightness(img)
+            boxes, confs, clss = self.trt_ssd.detect(img, self.conf_th)
+            with self.condition:
+                s_img, s_boxes = img, boxes
+                self.condition.notify()
         del self.trt_ssd
         self.cuda_ctx.pop()
         del self.cuda_ctx
@@ -290,15 +289,11 @@ def get_frame(condition, io, cam):
     alarm = False
 
     while True:
-        if running:
-            with condition:
-                if condition.wait(timeout=MAIN_THREAD_TIMEOUT):
-                    img, boxes = s_img, s_boxes
-                else:
-                    raise SystemExit('ERROR: timeout waiting for img from child')
-        else:
-            img, boxes = s_img, s_boxes
-
+        with condition:
+            if condition.wait(timeout=MAIN_THREAD_TIMEOUT):
+                img, boxes = s_img, s_boxes
+            else:
+                raise SystemExit('ERROR: timeout waiting for img from child')
         boxes = np.array(boxes)        
 
         H, W = img.shape[:2]
