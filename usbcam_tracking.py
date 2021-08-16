@@ -344,7 +344,7 @@ def get_frame(condition, io, cam):
                 #if (360 <  xmin + sens < 640 or 360 < xmax - sens < 640) or (160 < ymin + sens < 340 or 160 < ymax - sens < 340):
                     incnt += 1
                     check_count += 1
-                    if check_count >= sens and not alarm and running:
+                    if check_count >= sens and not alarm:
                         alarm = True
                         running = False
                         io.push_visual_alarm()
